@@ -4,6 +4,9 @@ from shapely.geometry import box
 # Define the area of interest (bounding box for University of Minnesota campus)
 north, south, east, west = 44.98795, 44.96187, -93.25482, -93.21358
 
+# Define the specific coordinate (latitude, longitude) for the red node
+mcdonalds = (44.98032, -93.23443)  # Example: Some point on the UMN campus
+
 try:
     # Create a bounding box polygon using Shapely
     bbox_polygon = box(west, south, east, north)
@@ -15,8 +18,15 @@ try:
     if graph.number_of_edges() == 0:
         raise ValueError("The graph contains no edges. Try a different area or network type.")
 
-    # Visualize the graph
-    ox.plot_graph(graph, bgcolor='k', node_color='r', edge_color='w', node_size=10)
+    # Find the nearest node to the red node's coordinates
+    red_node = ox.nearest_nodes(graph, X=mcdonalds[1], Y=mcdonalds[0])
+
+    # Visualize the graph with the red node highlighted
+    # Color all nodes gray, except the red node
+    node_color = ['r' if node == red_node else 'gray' for node in graph.nodes]
+
+    # Plot the graph
+    ox.plot_graph(graph, bgcolor='k', node_color=node_color, edge_color='w', node_size=10)
 
     # Save the graph to a file in GraphML format
     ox.save_graphml(graph, filepath="umn_campus.graphml")
@@ -34,6 +44,14 @@ try:
 
 except Exception as e:
     print(f"An error occurred: {e}")
+
+
+
+
+
+
+
+
 
 
 

@@ -7,10 +7,7 @@ north, south, east, west = 44.98795, 44.96187, -93.25482, -93.21358
 # Define the specific coordinates (latitude, longitude) for the 5 red nodes
 red_nodes_coords = [
     (44.98032, -93.23443),  # McDonald's
-    (44.97490, -93.23320),  # Example point 1
-    (44.98110, -93.23750),  # Example point 2
-    (44.97560, -93.22900),  # Example point 3
-    (44.97050, -93.23200),  # Example point 4
+    (44.97905, -93.23485),  # Raising Cane's
 ]
 
 try:
@@ -31,8 +28,11 @@ try:
     # Color all nodes gray, except the red nodes
     node_color = ['r' if node in red_nodes else 'gray' for node in graph.nodes]
 
+    # Make red nodes bigger
+    node_size = [20 if node in red_nodes else 1 for node in graph.nodes]
+
     # Plot the graph
-    ox.plot_graph(graph, bgcolor='k', node_color=node_color, edge_color='w', node_size=10)
+    ox.plot_graph(graph, bgcolor='k', node_color=node_color, edge_color='w', node_size=node_size)
 
     # Save the graph to a file in GraphML format
     ox.save_graphml(graph, filepath="umn_campus.graphml")

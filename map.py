@@ -4,11 +4,15 @@ from shapely.geometry import box
 # Define the area of interest (bounding box for University of Minnesota campus)
 north, south, east, west = 44.98795, 44.96187, -93.25482, -93.21358
 
-# Define the specific coordinates (latitude, longitude) for the 5 red nodes
+# Define the specific coordinates (latitude, longitude) for the restuarants
 red_nodes_coords = [
     (44.98032, -93.23443),  # McDonald's
     (44.97905, -93.23485),  # Raising Cane's
+    (44.98772, -93.23002),  # Blue Door
 ]
+
+# Define the coordinates for the starting node
+starting_node_coords = (44.97303, -93.23532)  # New starting point
 
 try:
     # Create a bounding box polygon using Shapely
@@ -24,12 +28,15 @@ try:
     # Find the nearest nodes to the coordinates of the 5 red nodes
     red_nodes = [ox.nearest_nodes(graph, X=lon, Y=lat) for lat, lon in red_nodes_coords]
 
-    # Visualize the graph with the red nodes highlighted
-    # Color all nodes gray, except the red nodes
-    node_color = ['r' if node in red_nodes else 'gray' for node in graph.nodes]
+    # Find the nearest node to the starting coordinates
+    starting_node = ox.nearest_nodes(graph, X=starting_node_coords[1], Y=starting_node_coords[0])
 
-    # Make red nodes bigger
-    node_size = [20 if node in red_nodes else 1 for node in graph.nodes]
+    # Visualize the graph with the red nodes and starting node highlighted
+    # Color all nodes gray, except the red nodes and starting node
+    node_color = ['lightgreen' if node == starting_node else ('r' if node in red_nodes else 'gray') for node in graph.nodes]
+
+    # Make red nodes and starting node bigger
+    node_size = [35 if node == starting_node else (35 if node in red_nodes else 0) for node in graph.nodes]
 
     # Plot the graph
     ox.plot_graph(graph, bgcolor='k', node_color=node_color, edge_color='w', node_size=node_size)

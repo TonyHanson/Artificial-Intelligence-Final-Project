@@ -16,6 +16,11 @@ red_nodes_coords = [
     (44.97347, -93.22340),  # Blaze Pizza
     (44.97600, -93.22673),  # Buffalo Wild Wings
     (44.97283, -93.24766),  # The Corner Bar
+    (44.98385, -93.24377),  # Maxwell's Cafe and Grill
+    (44.98385, -93.24805),  # Alma
+    (44.98762, -93.22586),  # Potter's Pasties & Pies
+    (44.96904, -93.24523),  # Fred's Chicken 'N' Waffles
+    (44.96562, -93.23593),  # Davanni's Pizza and Hot Hoagies
 ]
 
 # Define the coordinates for the starting node

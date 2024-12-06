@@ -9,6 +9,13 @@ red_nodes_coords = [
     (44.98032, -93.23443),  # McDonald's
     (44.97905, -93.23485),  # Raising Cane's
     (44.98772, -93.23002),  # Blue Door
+    (44.97419, -93.22676),  # Domino's
+    (44.97404, -93.22921),  # Chick-fil-A
+    (44.98017, -93.23638),  # Pho Mai
+    (44.98130, -93.23769),  # Frank & Andrea
+    (44.97347, -93.22340),  # Blaze Pizza
+    (44.97600, -93.22673),  # Buffalo Wild Wings
+    (44.97283, -93.24766),  # The Corner Bar
 ]
 
 # Define the coordinates for the starting node

@@ -46,11 +46,46 @@ def heuristic_manhattan(u, v, graph):
 
 def heuristic_zero(u, v, graph):
     return 0  # Acts as Dijkstra's algorithm
+def heuristic_go_right_then_goal(u, v, graph):
+    """
+    A non-admissible heuristic that forces the search to go towards the right (east) first,
+    and then head directly towards the goal once a sufficient rightward distance is traveled.
+    """
 
+    # Get coordinates of nodes u and v
+    u_coords = (graph.nodes[u]['y'], graph.nodes[u]['x'])
+    v_coords = (graph.nodes[v]['y'], graph.nodes[v]['x'])
+
+    # Goal coordinates
+    goal_coords = (graph.nodes[v]['y'], graph.nodes[v]['x'])
+
+    # Direct Euclidean distance from u to v (goal)
+    direct_distance = ((u_coords[0] - v_coords[0]) ** 2 + (u_coords[1] - v_coords[1]) ** 2) ** 0.5
+
+    # Heuristic that makes the path first go to the right (east)
+    # Increase the x-coordinate difference (rightward movement) before considering the goal
+    move_right_factor = 10  # Multiplier to encourage movement to the right first
+    
+    # Encourage moving rightwards (east). If we're further right, then head towards the goal.
+    horizontal_distance = v_coords[1] - u_coords[1]  # The east-west distance
+
+    if horizontal_distance > 0:
+        # If moving right, incentivize this direction even more
+        horizontal_heuristic = horizontal_distance * move_right_factor
+    else:
+        # If the node is already to the right, continue towards the goal
+        horizontal_heuristic = 0
+
+    # Add the final step towards the goal after moving right (if needed)
+    # The final move to the goal will be a Euclidean distance
+    total_heuristic = horizontal_heuristic + direct_distance
+
+    return total_heuristic
 heuristics = {
     "1": ("Euclidean Distance", heuristic_euclidean),
     "2": ("Manhattan Distance", heuristic_manhattan),
     "3": ("No Heuristic (Dijkstra)", heuristic_zero),
+    "4": ("right", heuristic_go_right_then_goal)
 }
 
 try:

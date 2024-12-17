@@ -29,7 +29,6 @@ red_nodes_coords = {
 
 # Define the coordinates for the starting node
 starting_node_coords = (44.97303, -93.23532)  # New starting point
-
 # Define heuristic functions
 def heuristic_euclidean(u, v, graph):
     u_coords = (graph.nodes[u]['y'], graph.nodes[u]['x'])
@@ -44,6 +43,7 @@ def heuristic_manhattan(u, v, graph):
 def heuristic_zero(u, v, graph):
     return 0  # Acts as Dijkstra's algorithm
 
+
 scenic_locations = [
     (44.977034, -93.227070),  # Stadium
     (44.97544717326716, -93.2360364119416),    # Walter Library
@@ -55,78 +55,68 @@ def heuristic_scenic(u, v, graph):
     """
     A non-admissible heuristic that prioritizes passing by scenic locations.
     Encourages revisiting nodes to generate a scenic path.
+    
+    Parameters:
+    - u: Current node
+    - v: Goal node
+    - graph: The graph where nodes have 'x' and 'y' coordinates
+    - scenic_locations: List of scenic locations [(y1, x1), (y2, x2), ...]
+    
+    Returns:
+    - A heuristic value that balances direct distance to the goal and scenic attraction.
     """
+    # Coordinates of current node (u) and goal node (v)
     u_coords = (graph.nodes[u]['y'], graph.nodes[u]['x'])
     v_coords = (graph.nodes[v]['y'], graph.nodes[v]['x'])
-
-    # Euclidean distance between u and v
+    # 1️⃣ Direct Euclidean distance from u to v
     direct_distance = ((u_coords[0] - v_coords[0]) ** 2 + (u_coords[1] - v_coords[1]) ** 2) ** 0.5
-    
-    # Add weight for scenic locations. The closer the node is to a scenic location, the more attractive it becomes.
+    # 2️⃣ Scenic weight - Prioritize paths near scenic locations
     scenic_weight = 0
     for scenic_loc in scenic_locations:
         scenic_dist = ((u_coords[0] - scenic_loc[0]) ** 2 + (u_coords[1] - scenic_loc[1]) ** 2) ** 0.5
-        scenic_weight += max(0, 1.0 / (scenic_dist + 0.0001))  # Add weight for proximity to scenic points
+        scenic_weight += max(0, 1.0 / (scenic_dist * 0.001))  # Use an inverse distance to add scenic attraction
+    # 3️⃣ Combine the heuristic components
+    scenic_bias = 5  # Controls how much the scenic route is favored (tune this parameter)
+    total_heuristic = direct_distance + scenic_bias * scenic_weight
+    return total_heuristic
+#
+#
+import random
+
+def heuristic_random(u, v, graph):
+    """
+    A random heuristic that introduces unpredictability in the pathfinding process.
     
-    # This overestimates the distance to the goal (non-admissible) by factoring in scenic locations.
-    return direct_distance + scenic_weight
-
-#
-#
-#
-#
-import random  # Import random to add variability
-
-def heuristic_go_right_then_goal(u, v, graph):
+    Parameters:
+    - u: Current node
+    - v: Goal node
+    - graph: The graph where nodes have 'x' and 'y' coordinates
+    
+    Returns:
+    - A random heuristic value.
     """
-    A non-admissible heuristic that forces the search to go towards the right (east) first,
-    and then head directly towards the goal once a sufficient rightward distance is traveled.
-    """
-
-    # Get coordinates of nodes u and v
+    # Coordinates of current node (u) and goal node (v)
     u_coords = (graph.nodes[u]['y'], graph.nodes[u]['x'])
     v_coords = (graph.nodes[v]['y'], graph.nodes[v]['x'])
-
-    # Goal coordinates
-    goal_coords = (graph.nodes[v]['y'], graph.nodes[v]['x'])
-
-    # Direct Euclidean distance from u to v (goal)
-    direct_distance = ((u_coords[0] - v_coords[0]) ** 2 + (u_coords[1] - v_coords[1]) ** 2) ** 0.5
-
-    # Heuristic that makes the path first go to the right (east)
-    # Increase the x-coordinate difference (rightward movement) before considering the goal
-    move_right_factor = 10  # Multiplier to encourage movement to the right first
     
-    # Encourage moving rightwards (east). If we're further right, then head towards the goal.
-    horizontal_distance = v_coords[1] - u_coords[1]  # The east-west distance
-
-    if horizontal_distance > 0:
-        # If moving right, incentivize this direction even more
-        horizontal_heuristic = horizontal_distance * move_right_factor
-    else:
-        # If the node is already to the right, continue towards the goal
-        horizontal_heuristic = 0
-
-    # Add the final step towards the goal after moving right (if needed)
-    # The final move to the goal will be a Euclidean distance
-    total_heuristic = horizontal_heuristic + direct_distance
-
+    # 1️⃣ Direct Euclidean distance from u to v (for a baseline)
+    direct_distance = ((u_coords[0] - v_coords[0]) ** 2 + (u_coords[1] - v_coords[1]) ** 2) ** 0.5
+    
+    # 2️⃣ Add a random value to the heuristic to introduce unpredictability
+    random_factor = random.uniform(0, 1000000)  # Random value between 0 and 10
+    
+    # 3️⃣ Combine direct distance with random factor
+    total_heuristic = direct_distance - random_factor
+    
     return total_heuristic
-
-
-
 #
 #
 #
 #
-#
-
-
 
 
 def Astar(graph, start, goal, heuristic):
     """A* search to find the shortest path in a graph."""
-    
     open_set = []  # Priority queue for open nodes
     heapq.heappush(open_set, (0, start))  # Push the start node into the queue
     
@@ -166,21 +156,22 @@ heuristics = {
     "2": ("Manhattan Distance", heuristic_manhattan),
     "3": ("No Heuristic (Dijkstra)", heuristic_zero),
     "4": ("Scenic Route Heuristic", heuristic_scenic),
-    "5": ("right right right", heuristic_go_right_then_goal)
+    "5": ("heuristic_random", heuristic_random)
 }
 
 try:
-    # Create a bounding box polygon using Shapely
     bbox_polygon = box(west, south, east, north)
-    # Download the graph for walking paths, streets, etc.
     graph = ox.graph_from_polygon(bbox_polygon, network_type="walk")
 
-    # Check if the graph contains edges
     if graph.number_of_edges() == 0:
         raise ValueError("The graph contains no edges. Try a different area or network type.")
 
-    # Find the nearest node to the starting coordinates
     starting_node = ox.nearest_nodes(graph, X=starting_node_coords[1], Y=starting_node_coords[0])
+
+    scenic_nodes = []
+    for coords in scenic_locations:
+        node = ox.nearest_nodes(graph, X=coords[1], Y=coords[0])
+        scenic_nodes.append(node)
 
     while True:
         # Ask the user to select a restaurant
@@ -216,21 +207,15 @@ try:
             print("\nSelect a heuristic for the A* search:")
             for key, (name, _) in heuristics.items():
                 print(f"{key}. {name}")
-
             user_input_heuristic = input("Enter the number corresponding to the heuristic: ").strip()
-
             if user_input_heuristic not in heuristics:
                 print("Invalid heuristic selection. Please try again.")
                 continue
-
             heuristic_name, heuristic_function = heuristics[user_input_heuristic]
-
             # Find the nearest node to the selected restaurant's coordinates
             destination_node = ox.nearest_nodes(graph, X=destination_coords[1], Y=destination_coords[0])
-
             # Start measuring time
             start_time = time.time()
-
             # Find the shortest path from the starting node to the destination node using A*
             try:
                 path = Astar(graph, starting_node, destination_node, heuristic=heuristic_function)
@@ -244,10 +229,12 @@ try:
                 print(f"Time taken for pathfinding: {time_taken:.8f} seconds.")  # More significant digits
 
                 # Generate the map when using a single heuristic
-                node_color = ['lightgreen' if node == starting_node else ('r' if node == destination_node else 'gray') for node in graph.nodes]
-                node_size = [35 if node == starting_node or node == destination_node else 0 for node in graph.nodes]
+                node_color = ['lightgreen' if node == starting_node else ('r' if node == destination_node else ('purple' if node in scenic_nodes else 'gray'))for node in graph.nodes]
+                node_size = [35 if node == starting_node or node == destination_node or node in scenic_nodes else 0 for node in graph.nodes]
                 path_edges = list(zip(path[:-1], path[1:]))
                 edge_color = ['b' if (u, v) in path_edges or (v, u) in path_edges else 'w' for u, v, k in graph.edges]
+                
+                
 
                 # Plot the graph without blocking the input loop
                 fig, ax = ox.plot_graph(

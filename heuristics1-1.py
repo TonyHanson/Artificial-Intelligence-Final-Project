@@ -1,15 +1,16 @@
 import osmnx as ox
-import matplotlib.pyplot as plt  # Import pyplot for figure control
+import matplotlib.pyplot as plt  
 from shapely.geometry import box
-import time  # Import time module for measuring execution time
+import time
 import heapq
 import math
 import random
 
-# Define the area of interest (bounding box for University of Minnesota campus)
+# First we will need to set the bounds of the map
+#we picked 4 coordinates that will be used to set the top, bottom, and side bounds of the map of campus that will have all of the restuarants we will be pathfinding to
 north, south, east, west = 44.98795, 44.96187, -93.25482, -93.21358
-
-# Define the specific coordinates (latitude, longitude) for the restaurants
+# These are restaurant nodes that will be represented as large red nodes on the map of campus
+#all of our coordinate pairs were sourced using a third party maping app
 red_nodes_coords = {
     "McDonald's": (44.98032, -93.23443),
     "Raising Cane's": (44.97905, -93.23485),
@@ -27,80 +28,58 @@ red_nodes_coords = {
     "Fred's Chicken 'N' Waffles": (44.96904, -93.24523),
     "Davanni's Pizza and Hot Hoagies": (44.96562, -93.23593),
 }
+# Define the coordinates for our starting node
+# we will always be starting the pathfinding algortihm from coffman memorial union
+starting_node_coords = (44.97303, -93.23532)
 
-# Define the coordinates for the starting node
-starting_node_coords = (44.97303, -93.23532)  # New starting point
-# Define heuristic functions
+#these are scenic locations for the scenic heuristic we are doing
+scenic_locations = [
+     (44.977034, -93.227070),  # Huntington Bank Stadium
+     (44.973194471442845, -93.23705506708603),  # Weisman Art Museum
+     (44.976244845144564, -93.2353631884106),   # Northrup Auditorium
+     (44.975112, -93.240431), #bohemian flats riverside park
+     (44.982340, -93.236528) #dinkytown main street
+]
+
+#Define heuristic functions
+
+#euclidiean distance-direct path from start to selected restaurant that acts as a bird flying directly to the location to guide the Astar's decisions
 def heuristic_euclidean(u, v, graph):
     u_coords = (graph.nodes[u]['y'], graph.nodes[u]['x'])
     v_coords = (graph.nodes[v]['y'], graph.nodes[v]['x'])
+    
     return ((u_coords[0] - v_coords[0]) ** 2 + (u_coords[1] - v_coords[1]) ** 2) ** 0.5
-
+#Manhattan Distance is finds the distance between coffman and the selected location based on horizontal and vertical movement to guide A*
 def heuristic_manhattan(u, v, graph):
     u_coords = (graph.nodes[u]['y'], graph.nodes[u]['x'])
     v_coords = (graph.nodes[v]['y'], graph.nodes[v]['x'])
+    
     return abs(u_coords[0] - v_coords[0]) + abs(u_coords[1] - v_coords[1])
-
+#We want to see how having no hueristic effects our runtime and path finding
 def heuristic_zero(u, v, graph):
     return 0  # Acts as Dijkstra's algorithm
-
-
-scenic_locations = [
-     (44.977034, -93.227070),  # Stadium
-     (44.973194471442845, -93.23705506708603),  # Weisman Art Museum
-     (44.976244845144564, -93.2353631884106),   # Northrup Auditorium
-     (44.975112, -93.240431), #bohemian flats 
-     (44.982340, -93.236528) #dinky
-
-
-]
-
+#this is a scenic pathfinding heuristic that gives heurisitc weight towards A* passing by the scenic locations we instantiated above
 def heuristic_scenic(u, v, graph):
-    """
-    A non-admissible heuristic that prioritizes passing by scenic locations.
-    Encourages revisiting nodes to generate a scenic path.
-    
-    Parameters:
-    - u: Current node
-    - v: Goal node
-    - graph: The graph where nodes have 'x' and 'y' coordinates
-    - scenic_locations: List of scenic locations [(y1, x1), (y2, x2), ...]
-    
-    Returns:
-    - A heuristic value that balances direct distance to the goal and scenic attraction.
-    """
+    #declare graphing coords of the startign point and desitination that the user picks
     u_coords = (graph.nodes[u]['y'], graph.nodes[u]['x'])
     v_coords = (graph.nodes[v]['y'], graph.nodes[v]['x'])
+    #this will use the euclidean distance as a foundation
     direct_distance = ((u_coords[0] - v_coords[0]) ** 2 + (u_coords[1] - v_coords[1]) ** 2) ** 0.5
+    #but then weight each decision with a scenic weight
     scenic_weight = 0
+    #this weight is based on the euclidian distance of the algorithm the node is looking at, to the list of scenic locations
     for scenic_loc in scenic_locations:
         scenic_dist = ((u_coords[0] - scenic_loc[0]) ** 2 + (u_coords[1] - scenic_loc[1]) ** 2) ** 0.5
-        scenic_weight += max(0, 1.0 / (scenic_dist * 0.001))  # Use an inverse distance to add scenic attraction
-    scenic_bias = -5000  # Controls how much the scenic route is favored (tune this parameter)
+        scenic_weight += max(0, 1.0 / (scenic_dist * 0.001))
+    scenic_bias = -5000
     total_heuristic = direct_distance + scenic_bias * scenic_weight
+    
     return total_heuristic
-#
-#
-
 def heuristic_random(u, v, graph):
-    """
-    A random heuristic that introduces unpredictability in the pathfinding process.
-    
-    Parameters:
-    - u: Current node
-    - v: Goal node
-    - graph: The graph where nodes have 'x' and 'y' coordinates
-    
-    Returns:
-    - A random heuristic value.
-    """
-    # Coordinates of current node (u) and goal node (v)
+    #
     u_coords = (graph.nodes[u]['y'], graph.nodes[u]['x'])
     v_coords = (graph.nodes[v]['y'], graph.nodes[v]['x'])
-    
-    # 1️⃣ Direct Euclidean distance from u to v (for a baseline)
     direct_distance = ((u_coords[0] - v_coords[0]) ** 2 + (u_coords[1] - v_coords[1]) ** 2) ** 0.5
-    
     # 2️⃣ Add a random value to the heuristic to introduce unpredictability
     random_factor = random.uniform(0, 1000000)  # Random value between 0 and 10
     
@@ -108,11 +87,6 @@ def heuristic_random(u, v, graph):
     total_heuristic = direct_distance - random_factor
     
     return total_heuristic
-#
-#
-#
-#
-
 
 def Astar(graph, start, goal, heuristic):
     """A* search to find the shortest path in a graph."""

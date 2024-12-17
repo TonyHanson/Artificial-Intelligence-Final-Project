@@ -4,6 +4,7 @@ from shapely.geometry import box
 import time  # Import time module for measuring execution time
 import heapq
 import math
+import random
 
 # Define the area of interest (bounding box for University of Minnesota campus)
 north, south, east, west = 44.98795, 44.96187, -93.25482, -93.21358
@@ -46,9 +47,8 @@ def heuristic_zero(u, v, graph):
 
 scenic_locations = [
     (44.977034, -93.227070),  # Stadium
-    (44.97544717326716, -93.2360364119416),    # Walter Library
-    (44.973194471442845, -93.23705506708603),  # Weisman Art Museum
-    (44.976244845144564, -93.2353631884106),   # Northrup Auditorium
+
+
 ]
 
 def heuristic_scenic(u, v, graph):
@@ -65,23 +65,18 @@ def heuristic_scenic(u, v, graph):
     Returns:
     - A heuristic value that balances direct distance to the goal and scenic attraction.
     """
-    # Coordinates of current node (u) and goal node (v)
     u_coords = (graph.nodes[u]['y'], graph.nodes[u]['x'])
     v_coords = (graph.nodes[v]['y'], graph.nodes[v]['x'])
-    # 1️⃣ Direct Euclidean distance from u to v
     direct_distance = ((u_coords[0] - v_coords[0]) ** 2 + (u_coords[1] - v_coords[1]) ** 2) ** 0.5
-    # 2️⃣ Scenic weight - Prioritize paths near scenic locations
     scenic_weight = 0
     for scenic_loc in scenic_locations:
         scenic_dist = ((u_coords[0] - scenic_loc[0]) ** 2 + (u_coords[1] - scenic_loc[1]) ** 2) ** 0.5
-        scenic_weight += max(0, 1.0 / (scenic_dist * 0.001))  # Use an inverse distance to add scenic attraction
-    # 3️⃣ Combine the heuristic components
-    scenic_bias = 5  # Controls how much the scenic route is favored (tune this parameter)
+        scenic_weight += max(0, 1.0 / (scenic_dist * 0.01))  # Use an inverse distance to add scenic attraction
+    scenic_bias = 500000000  # Controls how much the scenic route is favored (tune this parameter)
     total_heuristic = direct_distance + scenic_bias * scenic_weight
     return total_heuristic
 #
 #
-import random
 
 def heuristic_random(u, v, graph):
     """
@@ -126,6 +121,8 @@ def Astar(graph, start, goal, heuristic):
     
     f_score = {node: float('inf') for node in graph.nodes}  # Estimated distance from start to goal
     f_score[start] = heuristic(start, goal, graph)
+
+    visited_nodes_count = 0 # Initialize counter for visited nodes
     
     while open_set:
         current_f, current_node = heapq.heappop(open_set)
@@ -136,7 +133,7 @@ def Astar(graph, start, goal, heuristic):
                 path.append(current_node)
                 current_node = came_from[current_node]
             path.append(start)
-            return list(reversed(path))  # Return the path as a list of nodes
+            return list(reversed(path)), visited_nodes_count  # Return the path and the count of visited nodes
         
         for neighbor in graph.neighbors(current_node):
             tentative_g_score = g_score[current_node] + graph[current_node][neighbor][0]['length']
@@ -148,6 +145,8 @@ def Astar(graph, start, goal, heuristic):
                 
                 if neighbor not in [item[1] for item in open_set]:
                     heapq.heappush(open_set, (f_score[neighbor], neighbor))
+
+        visited_nodes_count += 1
     
     return float('inf')  # Return infinity if no path is found
 
@@ -218,7 +217,7 @@ try:
             start_time = time.time()
             # Find the shortest path from the starting node to the destination node using A*
             try:
-                path = Astar(graph, starting_node, destination_node, heuristic=heuristic_function)
+                path, visited_nodes = Astar(graph, starting_node, destination_node, heuristic=heuristic_function)
 
                 # End measuring time
                 end_time = time.time()
@@ -227,6 +226,7 @@ try:
                 time_taken = end_time - start_time
                 print(f"\nShortest path to {selected_restaurant} using {heuristic_name} visualized successfully.")
                 print(f"Time taken for pathfinding: {time_taken:.8f} seconds.")  # More significant digits
+                print(f"Total number of nodes visited: {visited_nodes}")
 
                 # Generate the map when using a single heuristic
                 node_color = ['lightgreen' if node == starting_node else ('r' if node == destination_node else ('purple' if node in scenic_nodes else 'gray'))for node in graph.nodes]
@@ -272,7 +272,7 @@ try:
 
                 # Find the shortest path from the starting node to the destination node using A*
                 try:
-                    path = Astar(graph, starting_node, destination_node, heuristic=heuristic_function)
+                    path, visited_nodes = Astar(graph, starting_node, destination_node, heuristic=heuristic_function)
 
                     # End measuring time
                     end_time = time.time()
@@ -283,6 +283,7 @@ try:
                     # Print the results for each heuristic
                     print(f"\n{heuristic_name} Heuristic:")
                     print(f"Time taken for pathfinding: {time_taken:.8f} seconds.")  # More significant digits
+                    print(f"Total number of nodes visited: {visited_nodes}")
 
                 except Exception as ex:
                     print(f"An error occurred during pathfinding with {heuristic_name} heuristic: {ex}")

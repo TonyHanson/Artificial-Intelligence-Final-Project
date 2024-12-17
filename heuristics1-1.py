@@ -46,7 +46,11 @@ def heuristic_zero(u, v, graph):
 
 
 scenic_locations = [
-    (44.977034, -93.227070),  # Stadium
+     (44.977034, -93.227070),  # Stadium
+     (44.973194471442845, -93.23705506708603),  # Weisman Art Museum
+     (44.976244845144564, -93.2353631884106),   # Northrup Auditorium
+     (44.975112, -93.240431), #bohemian flats 
+     (44.982340, -93.236528) #dinky
 
 
 ]
@@ -71,8 +75,8 @@ def heuristic_scenic(u, v, graph):
     scenic_weight = 0
     for scenic_loc in scenic_locations:
         scenic_dist = ((u_coords[0] - scenic_loc[0]) ** 2 + (u_coords[1] - scenic_loc[1]) ** 2) ** 0.5
-        scenic_weight += max(0, 1.0 / (scenic_dist * 0.01))  # Use an inverse distance to add scenic attraction
-    scenic_bias = 500000000  # Controls how much the scenic route is favored (tune this parameter)
+        scenic_weight += max(0, 1.0 / (scenic_dist * 0.001))  # Use an inverse distance to add scenic attraction
+    scenic_bias = -5000  # Controls how much the scenic route is favored (tune this parameter)
     total_heuristic = direct_distance + scenic_bias * scenic_weight
     return total_heuristic
 #

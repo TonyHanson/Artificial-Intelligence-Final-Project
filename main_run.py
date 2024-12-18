@@ -6,7 +6,7 @@ import heapq
 import math
 import random
 
-# First we will need to set the bounds of the map
+# First we will need to set the bounds of the map #
 #we picked 4 coordinates that will be used to set the top, bottom, and side bounds of the map of campus that will have all of the restuarants we will be pathfinding to
 north, south, east, west = 44.98795, 44.96187, -93.25482, -93.21358
 # These are restaurant nodes that will be represented as large red nodes on the map of campus

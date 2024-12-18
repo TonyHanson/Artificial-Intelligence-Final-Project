@@ -1,4 +1,6 @@
-README
+Kieran White, Michael Langevin, Tony Hansen
+whit3296@umn.edu, lang1288@umn.edu, hans7638@umn.edu
+
 #####
 
 Step 1: Install Required Packages

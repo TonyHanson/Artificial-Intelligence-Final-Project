@@ -75,47 +75,53 @@ def heuristic_scenic(u, v, graph):
     total_heuristic = direct_distance + scenic_bias * scenic_weight
     
     return total_heuristic
+#This eval function will choose a random factor to subtract from the direct distance to see how it effects the path
 def heuristic_random(u, v, graph):
-    #
+    # initialize the graph nodes of coffman and the destination
     u_coords = (graph.nodes[u]['y'], graph.nodes[u]['x'])
     v_coords = (graph.nodes[v]['y'], graph.nodes[v]['x'])
+    #we use the euclidean distance as a foundation for this heuristic as well 
     direct_distance = ((u_coords[0] - v_coords[0]) ** 2 + (u_coords[1] - v_coords[1]) ** 2) ** 0.5
-    # 2️⃣ Add a random value to the heuristic to introduce unpredictability
-    random_factor = random.uniform(0, 1000000)  # Random value between 0 and 10
-    
-    # 3️⃣ Combine direct distance with random factor
+    #this will generate a random factor between 0 and 1000000
+    random_factor = random.uniform(0, 1000000)
+    #now we will weight the euclidean heuristic with the random factor and return that evaluation
     total_heuristic = direct_distance - random_factor
     
     return total_heuristic
 
-def Astar(graph, start, goal, heuristic):
-    """A* search to find the shortest path in a graph."""
-    open_set = []  # Priority queue for open nodes
-    heapq.heappush(open_set, (0, start))  # Push the start node into the queue
-    
-    came_from = {}  # To reconstruct the path later
-    g_score = {node: float('inf') for node in graph.nodes}  # Distance from start to each node
-    g_score[start] = 0
-    
-    f_score = {node: float('inf') for node in graph.nodes}  # Estimated distance from start to goal
-    f_score[start] = heuristic(start, goal, graph)
 
-    visited_nodes_count = 0 # Initialize counter for visited nodes
-    
+#The Core of our code is this A* function that finds the paths through the map using whatever heuristics the user selects
+def Astar(graph, start, goal, heuristic):
+    #Priority queue for nodes
+    open_set = []  
+    #push the start node to the queue
+    heapq.heappush(open_set, (0, start))  
+    #visited nodes will be saved on here to retrace the path
+    came_from = {}  
+    #Distance from start to each node
+    g_score = {node: float('inf') for node in graph.nodes}  
+    g_score[start] = 0
+    #approximate distance from start to goal
+    f_score = {node: float('inf') for node in graph.nodes}
+    f_score[start] = heuristic(start, goal, graph)
+    #this will count the number of visited nodes
+    visited_nodes_count = 0
+    #this will keep looping while there are nodes in the open set
     while open_set:
         current_f, current_node = heapq.heappop(open_set)
-        
+        #if the node that is being looked at is the goal, then it will append all of the visited nodes to the path
         if current_node == goal:
             path = []
             while current_node in came_from:
                 path.append(current_node)
                 current_node = came_from[current_node]
             path.append(start)
-            return list(reversed(path)), visited_nodes_count  # Return the path and the count of visited nodes
-        
+            #Returns the reversed path and the count of visited nodes
+            return list(reversed(path)), visited_nodes_count 
+        #this for loop calculates the cost to reach each neighbor 
         for neighbor in graph.neighbors(current_node):
             tentative_g_score = g_score[current_node] + graph[current_node][neighbor][0]['length']
-            
+            #compares calulated paths and updates current node
             if tentative_g_score < g_score[neighbor]:
                 came_from[neighbor] = current_node
                 g_score[neighbor] = tentative_g_score
@@ -125,9 +131,10 @@ def Astar(graph, start, goal, heuristic):
                     heapq.heappush(open_set, (f_score[neighbor], neighbor))
 
         visited_nodes_count += 1
-    
-    return float('inf')  # Return infinity if no path is found
+    #for if no path is found
+    return float('inf') 
 
+#these will be a library of how the user can access the 
 heuristics = {
     "1": ("Euclidean Distance", heuristic_euclidean),
     "2": ("Manhattan Distance", heuristic_manhattan),
@@ -136,7 +143,9 @@ heuristics = {
     "5": ("heuristic_random", heuristic_random)
 }
 
+#execute code
 try:
+    #
     bbox_polygon = box(west, south, east, north)
     graph = ox.graph_from_polygon(bbox_polygon, network_type="walk")
 

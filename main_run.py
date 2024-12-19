@@ -145,7 +145,7 @@ heuristics = {
 
 #execute code
 try:
-    #
+    #these will create the map and instantiate the nodes and edges
     bbox_polygon = box(west, south, east, north)
     graph = ox.graph_from_polygon(bbox_polygon, network_type="walk")
 
@@ -160,7 +160,7 @@ try:
         scenic_nodes.append(node)
 
     while True:
-        # Ask the user to select a restaurant
+        #Asks the user to select a restaurant
         print("\nSelect a restaurant to find the shortest path to, or type 'exit' to quit:")
         for i, restaurant in enumerate(red_nodes_coords.keys(), start=1):
             print(f"{i}. {restaurant}")
@@ -181,7 +181,7 @@ try:
         destination_coords = red_nodes_coords[selected_restaurant]
         GOAL = destination_coords = red_nodes_coords[selected_restaurant]
 
-        # Ask the user if they want to use all heuristics
+        #asks the user if they want to use all heuristics
         print("\nSelect an option:")
         print("1. Use a single heuristic")
         print("2. Use all three heuristics and compare results")
@@ -189,7 +189,7 @@ try:
         user_input_option = input("Enter the number corresponding to the option: ").strip()
 
         if user_input_option == "1":
-            # Ask the user to select a heuristic
+            #Asks the user to select a heuristic
             print("\nSelect a heuristic for the A* search:")
             for key, (name, _) in heuristics.items():
                 print(f"{key}. {name}")
@@ -198,21 +198,20 @@ try:
                 print("Invalid heuristic selection. Please try again.")
                 continue
             heuristic_name, heuristic_function = heuristics[user_input_heuristic]
-            # Find the nearest node to the selected restaurant's coordinates
+            #This will find the nearest node to the selected desitination
             destination_node = ox.nearest_nodes(graph, X=destination_coords[1], Y=destination_coords[0])
-            # Start measuring time
+            #starts measuring the time it takes to run
             start_time = time.time()
-            # Find the shortest path from the starting node to the destination node using A*
+            #this will try to find the shortest path from the starting node to the destination node using our A*
             try:
                 path, visited_nodes = Astar(graph, starting_node, destination_node, heuristic=heuristic_function)
 
-                # End measuring time
+                #this stops the clock we set earlier 
                 end_time = time.time()
-
-                # Calculate the time taken for the pathfinding process with higher precision
+                #we can calculate the time it took by doing this
                 time_taken = end_time - start_time
                 print(f"\nShortest path to {selected_restaurant} using {heuristic_name} visualized successfully.")
-                print(f"Time taken for pathfinding: {time_taken:.8f} seconds.")  # More significant digits
+                print(f"Time taken for pathfinding: {time_taken:.8f} seconds.")
                 print(f"Total number of nodes visited: {visited_nodes}")
 
                 # Generate the map when using a single heuristic
@@ -223,7 +222,7 @@ try:
                 
                 
 
-                # Plot the graph without blocking the input loop
+                #Plots the graph
                 fig, ax = ox.plot_graph(
                     graph,
                     bgcolor='k',
@@ -233,11 +232,11 @@ try:
                     edge_linewidth=[3 if (u, v) in path_edges or (v, u) in path_edges else 0.5 for u, v, k in graph.edges],
                     figsize=(20, 16),
                     dpi=100,
-                    show=False  # Do not block execution with the plot
+                    show=False  
                 )
 
-                plt.show(block=False)  # Show the plot in non-blocking mode
-                plt.pause(0.001)       # Allow rendering of the plot
+                plt.show(block=False) 
+                plt.pause(0.001)       
 
                 print("\n")
                 print("-----------------------------------------------------------------------------------------")
@@ -248,28 +247,26 @@ try:
                 print(f"An error occurred during pathfinding: {ex}")
 
         elif user_input_option == "2":
-            # Compare all heuristics
+            # this will compare the results
             print("\nComparing results using all three heuristics:")
 
             destination_node = ox.nearest_nodes(graph, X=destination_coords[1], Y=destination_coords[0])
 
             for key, (heuristic_name, heuristic_function) in heuristics.items():
-                # Start measuring time
+                #start the clock
                 start_time = time.time()
 
-                # Find the shortest path from the starting node to the destination node using A*
+                #find the shortest path via the A* algo
                 try:
                     path, visited_nodes = Astar(graph, starting_node, destination_node, heuristic=heuristic_function)
 
-                    # End measuring time
+                    #stop the clock
                     end_time = time.time()
-
-                    # Calculate the time taken for the pathfinding process with higher precision
+                    #calculate the runtime
                     time_taken = end_time - start_time
-
-                    # Print the results for each heuristic
+                    #THis will print the results for each heuristic. 
                     print(f"\n{heuristic_name} Heuristic:")
-                    print(f"Time taken for pathfinding: {time_taken:.8f} seconds.")  # More significant digits
+                    print(f"Time taken for pathfinding: {time_taken:.8f} seconds.")
                     print(f"Total number of nodes visited: {visited_nodes}")
 
                 except Exception as ex:

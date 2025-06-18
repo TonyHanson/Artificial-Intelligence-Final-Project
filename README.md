@@ -1,5 +1,5 @@
-Kieran White, Michael Langevin, Tony Hanson
-whit3296@umn.edu, lang1288@umn.edu, hans7638@umn.edu
+Tony Hanson
+hans7638@umn.edu
 
 #####
 
